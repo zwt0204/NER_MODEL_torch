@@ -14,6 +14,8 @@ from torch.optim import Adam
 from .data_utils import dump_jsonl
 from .dataset_adapters import load_dataset
 from .eval_utils import compute_token_metrics
+from .gazetteer_utils import Gazetteer, load_gazetteer
+from .instance_builder import LatticeInstance, LatticeInstanceBuilder
 from .model import NerCore
 
 
@@ -24,10 +26,11 @@ class Batch:
     lengths: torch.Tensor
     lexicon_ids: torch.Tensor
     lexicon_lengths: torch.Tensor
+    instances: List[LatticeInstance]
 
 
 class NerTrainner:
-    def __init__(self, vocab_file: str = 'vocab.json', model_dir: str = 'models/LatticeLSTM'):
+    def __init__(self, vocab_file: str = 'vocab.json', model_dir: str = 'models/LatticeLSTM', gazetteer_file: str | None = None):
         self.model_dir = model_dir
         self.vocab_file = vocab_file
         self.char_index = {' ': 0}
@@ -35,6 +38,7 @@ class NerTrainner:
         self.unknow_char_id = len(self.char_index)
         self.io_sequence_size = 50
         self.max_lexicon_words_num = 4
+        self.gazetteer = load_gazetteer(gazetteer_file) if gazetteer_file else Gazetteer()
         vocab_size = len(self.char_index) + 1
         self.classnames = {'O': 0, 'B-BRD': 1, 'I-BRD': 2, 'B-KWD': 3, 'I-KWD': 4}
         class_size = len(self.classnames)
@@ -43,6 +47,14 @@ class NerTrainner:
         trainable = True
         self.batch_size = 16
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.builder = LatticeInstanceBuilder(
+            char_index=self.char_index,
+            label_index=self.classnames,
+            gazetteer=self.gazetteer,
+            io_sequence_size=self.io_sequence_size,
+            max_lexicon_words_num=self.max_lexicon_words_num,
+            unk_id=self.unknow_char_id,
+        )
 
         self.model = NerCore(
             self.io_sequence_size,
@@ -51,7 +63,7 @@ class NerTrainner:
             keep_prob,
             learning_rate,
             trainable,
-            lexicon_vocab_size=vocab_size,
+            lexicon_vocab_size=max(vocab_size, self.gazetteer.size() + 1),
             max_lexicon_words_num=self.max_lexicon_words_num,
         )
         self.model.to(self.device)
@@ -102,59 +114,19 @@ class NerTrainner:
 
     def iter_batches(self, records: List[dict]):
         for i in range(0, len(records), self.batch_size):
-            yield self.convert_batch(records[i:i + self.batch_size])
+            instances = self.builder.build_instances(records[i:i + self.batch_size])
+            yield self.convert_instances_to_batch(instances)
 
-    def build_lexicon_features(self, text: str):
-        lexicon_ids = torch.zeros((self.io_sequence_size, self.max_lexicon_words_num), dtype=torch.long)
-        lexicon_lengths = torch.zeros((self.io_sequence_size, self.max_lexicon_words_num), dtype=torch.float32)
-        max_len = min(len(text), self.io_sequence_size)
-        for start in range(max_len):
-            candidates = []
-            for span_len in range(2, min(5, max_len - start + 1)):
-                token = text[start:start + span_len]
-                candidates.append((token, span_len))
-            candidates = candidates[:self.max_lexicon_words_num]
-            for j, (token, span_len) in enumerate(candidates):
-                lexicon_ids[start, j] = self.char_index.get(token[0], self.unknow_char_id)
-                lexicon_lengths[start, j] = float(span_len)
-        return lexicon_ids, lexicon_lengths
-
-    def convert_batch(self, records: List[dict]) -> Batch:
-        count = len(records)
-        xrows = torch.zeros((count, self.io_sequence_size), dtype=torch.long)
-        xlens = torch.zeros((count,), dtype=torch.long)
-        yrows = torch.zeros((count, self.io_sequence_size), dtype=torch.long)
-        lexicon_rows = torch.zeros((count, self.io_sequence_size, self.max_lexicon_words_num), dtype=torch.long)
-        lexicon_length_rows = torch.zeros((count, self.io_sequence_size, self.max_lexicon_words_num), dtype=torch.float32)
-        for i, record in enumerate(records):
-            sent_text = record['text']
-            tags = record['label'].split(' ')
-            xlen = min(len(sent_text), self.io_sequence_size)
-            xlens[i] = xlen
-            xrows[i] = self.convert_xrow(sent_text)
-            yrows[i] = self.convert_classids(tags)
-            lex_ids, lex_lens = self.build_lexicon_features(sent_text)
-            lexicon_rows[i] = lex_ids
-            lexicon_length_rows[i] = lex_lens
+    def convert_instances_to_batch(self, instances: List[LatticeInstance]) -> Batch:
+        batch = self.builder.tensorize_instances(instances, self.device)
         return Batch(
-            inputs=xrows.to(self.device),
-            targets=yrows.to(self.device),
-            lengths=xlens.to(self.device),
-            lexicon_ids=lexicon_rows.to(self.device),
-            lexicon_lengths=lexicon_length_rows.to(self.device),
+            inputs=batch['inputs'],
+            targets=batch['targets'],
+            lengths=batch['lengths'],
+            lexicon_ids=batch['lexicon_ids'],
+            lexicon_lengths=batch['lexicon_lengths'],
+            instances=batch['instances'],
         )
-
-    def convert_classids(self, tags: List[str]) -> torch.Tensor:
-        yrow = torch.zeros(self.io_sequence_size, dtype=torch.long)
-        for i, tag in enumerate(tags[:self.io_sequence_size]):
-            yrow[i] = self.classnames.get(tag, self.classnames['O'])
-        return yrow
-
-    def convert_xrow(self, input_text: str) -> torch.Tensor:
-        char_vector = torch.zeros((self.io_sequence_size,), dtype=torch.long)
-        for i, char_value in enumerate(input_text[:self.io_sequence_size]):
-            char_vector[i] = self.char_index.get(char_value, self.unknow_char_id)
-        return char_vector
 
     def load_samples(self, dstfile: str = 'train.json') -> List[dict]:
         return load_dataset(dstfile, fmt='auto')
@@ -168,6 +140,7 @@ class NerTrainner:
                 'classnames': self.classnames,
                 'io_sequence_size': self.io_sequence_size,
                 'max_lexicon_words_num': self.max_lexicon_words_num,
+                'gazetteer_size': self.gazetteer.size(),
             },
             model_path,
         )
@@ -210,10 +183,11 @@ def main():
     parser.add_argument('--dev-file', default=None)
     parser.add_argument('--dev-format', default='auto', choices=['auto', 'jsonl', 'conll'])
     parser.add_argument('--model-dir', default='models/LatticeLSTM')
+    parser.add_argument('--gazetteer-file', default=None)
     parser.add_argument('--epochs', type=int, default=10)
     args = parser.parse_args()
 
-    trainner = NerTrainner(vocab_file=args.vocab_file, model_dir=args.model_dir)
+    trainner = NerTrainner(vocab_file=args.vocab_file, model_dir=args.model_dir, gazetteer_file=args.gazetteer_file)
     train_records = load_dataset(args.train_file, fmt=args.train_format)
     tmp_dir = tempfile.mkdtemp(prefix='ner_lattice_lstm_train_')
     train_file = os.path.join(tmp_dir, 'train.json')

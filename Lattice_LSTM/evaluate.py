@@ -13,11 +13,12 @@ def main():
     parser.add_argument('--vocab-file', required=True)
     parser.add_argument('--model-dir', default='models/LatticeLSTM')
     parser.add_argument('--model-path', default=None)
+    parser.add_argument('--gazetteer-file', default=None)
     parser.add_argument('--eval-file', required=True)
     parser.add_argument('--eval-format', default='auto', choices=['auto', 'jsonl', 'conll'])
     args = parser.parse_args()
 
-    trainer = NerTrainner(vocab_file=args.vocab_file, model_dir=args.model_dir)
+    trainer = NerTrainner(vocab_file=args.vocab_file, model_dir=args.model_dir, gazetteer_file=args.gazetteer_file)
     model_path = args.model_path or os.path.join(args.model_dir, 'ner.pt')
     ok = trainer.load(model_path)
     if not ok:

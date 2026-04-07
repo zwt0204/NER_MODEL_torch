@@ -26,6 +26,7 @@ def main():
     run([
         '-m', 'Lattice_LSTM.train',
         '--vocab-file', 'Lattice_LSTM/demo_data/vocab.json',
+        '--gazetteer-file', 'Lattice_LSTM/demo_data/gazetteer.txt',
         '--train-file', 'Lattice_LSTM/demo_data/train.json',
         '--train-format', 'jsonl',
         '--dev-file', 'Lattice_LSTM/demo_data/dev.json',
@@ -36,6 +37,7 @@ def main():
     eval_out = run([
         '-m', 'Lattice_LSTM.evaluate',
         '--vocab-file', 'Lattice_LSTM/demo_data/vocab.json',
+        '--gazetteer-file', 'Lattice_LSTM/demo_data/gazetteer.txt',
         '--model-dir', 'Lattice_LSTM/demo_data/model',
         '--eval-file', 'Lattice_LSTM/demo_data/dev.json',
         '--eval-format', 'jsonl',
@@ -45,6 +47,7 @@ def main():
     pred_out = run([
         '-m', 'Lattice_LSTM.predict',
         '--vocab-file', 'Lattice_LSTM/demo_data/vocab.json',
+        '--gazetteer-file', 'Lattice_LSTM/demo_data/gazetteer.txt',
         '--model-path', 'Lattice_LSTM/demo_data/model/ner.pt',
         '--text', '请问肯德基优惠券在哪里',
     ])
