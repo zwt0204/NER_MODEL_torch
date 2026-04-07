@@ -4,7 +4,12 @@ PyTorch NER baselines extracted and refactored from `NER_MODEL`.
 
 ## Current status
 
-This repo currently includes a fully runnable **BiLSTM-CRF** baseline with:
+This repo currently includes runnable torch baselines with:
+
+- **BiLSTM-CRF**
+- **BiLSTM-CNN-CRF**
+
+Shared capabilities:
 
 - PyTorch implementation
 - Training entry
@@ -17,7 +22,9 @@ This repo currently includes a fully runnable **BiLSTM-CRF** baseline with:
 ## Structure
 
 - `BILSTM_CRF/` - torch implementation and docs
-- `test_bilstm_crf_e2e.py` - end-to-end validation script
+- `BILSTM_CNN_CRF/` - torch implementation and docs
+- `test_bilstm_crf_e2e.py` - BiLSTM-CRF validation script
+- `test_bilstm_cnn_crf_e2e.py` - BiLSTM-CNN-CRF validation script
 
 ## Quick start
 
@@ -78,4 +85,5 @@ Prediction smoke test:
 - Push marker: initial release.
 - Fake data is only for pipeline validation, not for real-world benchmark claims.
 - On synthetic data, perfect scores mainly indicate that the pipeline is correct and the task pattern is learnable.
+- `BILSTM_CNN_CRF` has also been migrated and smoke-tested in this repo.
 - Other models from the original repo are not yet migrated in this repo.
