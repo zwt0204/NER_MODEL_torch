@@ -1,0 +1,40 @@
+{"text": "麦当劳的电脑好不好", "label": "B-BRD I-BRD I-BRD O B-KWD I-KWD O O O"}
+{"text": "新品苹果在哪里", "label": "B-KWD I-KWD B-BRD I-BRD O O O"}
+{"text": "我想了解华为门店值得买吗", "label": "O O O O B-BRD I-BRD B-KWD I-KWD O O O O"}
+{"text": "特斯拉门店在哪里", "label": "B-BRD I-BRD I-BRD B-KWD I-KWD O O O"}
+{"text": "门店肯德基地址在哪", "label": "B-KWD I-KWD B-BRD I-BRD I-BRD O O O O"}
+{"text": "苹果地址在哪里", "label": "B-BRD I-BRD B-KWD I-KWD O O O"}
+{"text": "华为的优惠券在哪里", "label": "B-BRD I-BRD O B-KWD I-KWD I-KWD O O O"}
+{"text": "电脑华为怎么样", "label": "B-KWD I-KWD B-BRD I-BRD O O O"}
+{"text": "地址苹果好不好", "label": "B-KWD I-KWD B-BRD I-BRD O O O"}
+{"text": "帮我查下特斯拉新品在哪里", "label": "O O O O B-BRD I-BRD I-BRD B-KWD I-KWD O O O"}
+{"text": "特斯拉手机值得买吗", "label": "B-BRD I-BRD I-BRD B-KWD I-KWD O O O O"}
+{"text": "星巴克的总部值得买吗", "label": "B-BRD I-BRD I-BRD O B-KWD I-KWD O O O O"}
+{"text": "手机肯德基电话多少", "label": "B-KWD I-KWD B-BRD I-BRD I-BRD O O O O"}
+{"text": "想知道特斯拉地址好不好", "label": "O O O B-BRD I-BRD I-BRD B-KWD I-KWD O O O"}
+{"text": "请问肯德基电脑在哪里", "label": "O O B-BRD I-BRD I-BRD B-KWD I-KWD O O O"}
+{"text": "我想了解苹果手机地址在哪", "label": "O O O O B-BRD I-BRD B-KWD I-KWD O O O O"}
+{"text": "华为的总部值得买吗", "label": "B-BRD I-BRD O B-KWD I-KWD O O O O"}
+{"text": "小米的电脑在哪里", "label": "B-BRD I-BRD O B-KWD I-KWD O O O"}
+{"text": "星巴克地址怎么样", "label": "B-BRD I-BRD I-BRD B-KWD I-KWD O O O"}
+{"text": "请问特斯拉手机电话多少", "label": "O O B-BRD I-BRD I-BRD B-KWD I-KWD O O O O"}
+{"text": "肯德基的新品电话多少", "label": "B-BRD I-BRD I-BRD O B-KWD I-KWD O O O O"}
+{"text": "麻烦问下肯德基门店好不好", "label": "O O O O B-BRD I-BRD I-BRD B-KWD I-KWD O O O"}
+{"text": "请问华为手机怎么样", "label": "O O B-BRD I-BRD B-KWD I-KWD O O O"}
+{"text": "电脑苹果在哪里", "label": "B-KWD I-KWD B-BRD I-BRD O O O"}
+{"text": "麻烦问下麦当劳电脑怎么样", "label": "O O O O B-BRD I-BRD I-BRD B-KWD I-KWD O O O"}
+{"text": "特斯拉手机在哪里", "label": "B-BRD I-BRD I-BRD B-KWD I-KWD O O O"}
+{"text": "优惠券小米值得买吗", "label": "B-KWD I-KWD I-KWD B-BRD I-BRD O O O O"}
+{"text": "麦当劳门店在哪里", "label": "B-BRD I-BRD I-BRD B-KWD I-KWD O O O"}
+{"text": "手机苹果地址在哪", "label": "B-KWD I-KWD B-BRD I-BRD O O O O"}
+{"text": "想知道苹果电脑好不好", "label": "O O O B-BRD I-BRD B-KWD I-KWD O O O"}
+{"text": "苹果的手机值得买吗", "label": "B-BRD I-BRD O B-KWD I-KWD O O O O"}
+{"text": "麦当劳的优惠券在哪里", "label": "B-BRD I-BRD I-BRD O B-KWD I-KWD I-KWD O O O"}
+{"text": "请问麦当劳客服电话多少", "label": "O O B-BRD I-BRD I-BRD B-KWD I-KWD O O O O"}
+{"text": "苹果的门店好不好", "label": "B-BRD I-BRD O B-KWD I-KWD O O O"}
+{"text": "地址星巴克在哪里", "label": "B-KWD I-KWD B-BRD I-BRD I-BRD O O O"}
+{"text": "星巴克地址好不好", "label": "B-BRD I-BRD I-BRD B-KWD I-KWD O O O"}
+{"text": "华为的总部值得买吗", "label": "B-BRD I-BRD O B-KWD I-KWD O O O O"}
+{"text": "特斯拉的地址怎么样", "label": "B-BRD I-BRD I-BRD O B-KWD I-KWD O O O"}
+{"text": "肯德基的手机好不好", "label": "B-BRD I-BRD I-BRD O B-KWD I-KWD O O O"}
+{"text": "客服肯德基地址在哪", "label": "B-KWD I-KWD B-BRD I-BRD I-BRD O O O O"}
