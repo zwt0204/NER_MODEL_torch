@@ -46,5 +46,6 @@ python -m BILSTM_CRF.predict \
 ## Notes
 
 - Current migration scope: `BILSTM_CRF` only.
+- Push marker: initial release.
 - Fake data is only for pipeline validation, not for real-world benchmark claims.
 - Other models from the original repo are not yet migrated in this repo.
