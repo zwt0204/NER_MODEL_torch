@@ -10,3 +10,4 @@ IDCNN_CRF/demo_data/
 transformer_crf/demo_data/
 albert_crf_ner/demo_data/
 albert_bisltm_crf/demo_data/
+Lattice_LSTM/demo_data/
