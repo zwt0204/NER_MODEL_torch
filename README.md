@@ -43,9 +43,39 @@ python -m BILSTM_CRF.predict \
   --text "请问肯德基优惠券在哪里"
 ```
 
+## Verified synthetic-data experiment
+
+A reproducible synthetic-data run has been completed in this repo with:
+
+- train size: `500`
+- dev size: `100`
+- epochs: `5`
+
+Observed results:
+
+- Epoch 1: `train loss=7.263347`, `dev f1=0.9771`
+- Epoch 2: `train loss=0.750803`, `dev f1=1.0000`
+- Epoch 3: `train loss=0.192112`, `dev f1=1.0000`
+- Epoch 4: `train loss=0.075270`, `dev f1=1.0000`
+- Epoch 5: `train loss=0.044115`, `dev f1=1.0000`
+
+Standalone evaluation:
+
+- `acc=1.0000`
+- `prec=1.0000`
+- `recall=1.0000`
+- `f1=1.0000`
+- `support=963`
+
+Prediction smoke test:
+
+- input: `请问肯德基优惠券在哪里`
+- output: `肯德基 , 优惠券`
+
 ## Notes
 
 - Current migration scope: `BILSTM_CRF` only.
 - Push marker: initial release.
 - Fake data is only for pipeline validation, not for real-world benchmark claims.
+- On synthetic data, perfect scores mainly indicate that the pipeline is correct and the task pattern is learnable.
 - Other models from the original repo are not yet migrated in this repo.
