@@ -4,22 +4,21 @@ PyTorch baseline implementation of `albert_bisltm_crf`.
 
 ## Important scope note
 
-The current runtime environment does **not** provide the `transformers` package, so this migration does **not** load a real HuggingFace `AlbertModel` yet.
+This migration now uses a real HuggingFace **`AlbertModel`** encoder backbone, followed by a BiLSTM and CRF head.
 
-To keep the migration moving with minimal scope expansion, this version provides a **stub ALBERT-style encoder + BiLSTM + CRF baseline** with the same high-level intent as the original TensorFlow project:
+Current scope is intentionally conservative:
 
-- encoder stub
-- BiLSTM
-- linear classifier
-- CRF (`TorchCRF`)
+- the code path is now based on `transformers` + `AlbertModel`
+- the default runtime path uses a **small random-initialized `AlbertConfig`** so the existing train / evaluate / predict pipeline can run without depending on an external model download
+- this means the project has moved from a pure local encoder stub to a **real transformer + BiLSTM implementation**, but it is still **not yet a verified pretrained-ALBERT reproduction**
 
-This means the current implementation is suitable for:
+So the current version is suitable for:
 
 - PyTorch pipeline migration
 - train / evaluate / predict entry alignment
-- synthetic-data e2e verification
+- synthetic-data e2e verification on top of a real transformer architecture
 
-But it is **not yet** a claim of real pretrained-ALBERT equivalence.
+But it should still **not** be described as a validated pretrained-ALBERT result yet.
 
 ## Current validation label space
 
@@ -59,4 +58,6 @@ python -m albert_bisltm_crf.predict \
 
 - `TorchCRF` is used, not `torchcrf`.
 - Fake data is only for pipeline validation, not for real business quality claims.
-- Real ALBERT pretrained weight loading is still unimplemented in this environment.
+- The encoder implementation now depends on `transformers` and `AlbertModel`.
+- The current default path uses a small random-initialized ALBERT config to keep the pipeline self-contained.
+- Pretrained-weight loading / real-data effect is still unverified.

@@ -1,7 +1,9 @@
 # -*- encoding: utf-8 -*-
 """
-PyTorch baseline implementation of Albert-BiLSTM-CRF-style NER.
-This runtime currently uses a lightweight encoder stub instead of a real pretrained AlbertModel.
+PyTorch Albert-BiLSTM-CRF-style NER using a real HuggingFace `AlbertModel`
+encoder backbone followed by a BiLSTM and CRF.
+The default runtime path uses a small random-initialized ALBERT config so the
+pipeline remains self-contained without external weight downloads.
 """
 from __future__ import annotations
 
@@ -10,6 +12,7 @@ from typing import Dict, List, Sequence, Tuple
 import torch
 from torch import nn
 from TorchCRF import CRF
+from transformers import AlbertConfig, AlbertModel
 
 
 class NerCore(nn.Module):
@@ -32,11 +35,28 @@ class NerCore(nn.Module):
         self.embedding_size = 128
         self.hidden_size = 128
         self.num_layers = 1
+        self.albert_hidden_size = 128
+        self.albert_ffn_dim = 256
+        self.albert_num_heads = 4
+        self.albert_num_layers = 2
 
-        self.embedding = nn.Embedding(self.vocab_size, self.embedding_size, padding_idx=0)
+        config = AlbertConfig(
+            vocab_size=self.vocab_size,
+            embedding_size=self.embedding_size,
+            hidden_size=self.albert_hidden_size,
+            intermediate_size=self.albert_ffn_dim,
+            num_attention_heads=self.albert_num_heads,
+            num_hidden_layers=self.albert_num_layers,
+            max_position_embeddings=max(512, io_sequence_size + 8),
+            hidden_dropout_prob=1 - self.keep_prob,
+            attention_probs_dropout_prob=1 - self.keep_prob,
+            type_vocab_size=1,
+            pad_token_id=0,
+        )
+        self.encoder_backbone = AlbertModel(config)
         self.dropout = nn.Dropout(1 - self.keep_prob)
         self.encoder = nn.LSTM(
-            input_size=self.embedding_size,
+            input_size=self.albert_hidden_size,
             hidden_size=self.hidden_size,
             num_layers=self.num_layers,
             batch_first=True,
@@ -52,8 +72,8 @@ class NerCore(nn.Module):
 
     def forward(self, inputs: torch.Tensor, sequence_lengths: torch.Tensor) -> torch.Tensor:
         mask = self.sequence_mask(sequence_lengths, inputs.size(1))
-        x = self.embedding(inputs.long())
-        x = self.dropout(x)
+        outputs = self.encoder_backbone(input_ids=inputs.long(), attention_mask=mask.long())
+        x = self.dropout(outputs.last_hidden_state)
         packed = nn.utils.rnn.pack_padded_sequence(
             x,
             lengths=sequence_lengths.detach().cpu(),

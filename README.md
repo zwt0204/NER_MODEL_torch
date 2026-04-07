@@ -10,6 +10,9 @@ This repo currently includes runnable torch baselines with:
 - **BiLSTM-CNN-CRF**
 - **IDCNN-CRF**
 - **Transformer-CRF**
+- **Lattice-LSTM**
+- **Albert-CRF NER** (current environment uses an ALBERT-style stub encoder, not real pretrained `AlbertModel` weights)
+- **Albert-BiLSTM-CRF** (current environment uses an ALBERT-style stub encoder, not real pretrained `AlbertModel` weights)
 
 Shared capabilities:
 
@@ -21,15 +24,41 @@ Shared capabilities:
 - Dataset adapters for `jsonl` and `conll/bio`
 - End-to-end test script
 
+## Migration status matrix
+
+| Model | Torch implementation | Synthetic e2e verified | Real pretrained backbone | Real-data verified |
+| --- | --- | --- | --- | --- |
+| `BILSTM_CRF` | Yes | Yes | N/A | No |
+| `BILSTM_CNN_CRF` | Yes | Yes | N/A | No |
+| `IDCNN_CRF` | Yes | Yes | N/A | No |
+| `transformer_crf` | Yes | Yes | N/A | No |
+| `Lattice_LSTM` | Yes | Yes | N/A | No |
+| `albert_crf_ner` | Yes | Yes | No — current version is a stub ALBERT-style encoder baseline | No |
+| `albert_bisltm_crf` | Yes | Yes | No — current version is a stub ALBERT-style encoder baseline | No |
+
+Interpretation:
+
+- **Torch implementation** means train / evaluate / predict flow is runnable in this repo.
+- **Synthetic e2e verified** means fake-data generation, training, evaluation, and prediction were run end-to-end successfully.
+- **Real pretrained backbone** is only relevant for transformer / ALBERT-style families. The two ALBERT directories are currently pipeline-compatible baselines, not true HuggingFace pretrained-weight integrations.
+- **Real-data verified** is still `No` across the board.
+
 ## Structure
 
 - `BILSTM_CRF/` - torch implementation and docs
 - `BILSTM_CNN_CRF/` - torch implementation and docs
+- `IDCNN_CRF/` - torch implementation and docs
 - `transformer_crf/` - torch implementation and docs
+- `Lattice_LSTM/` - torch implementation and docs
+- `albert_crf_ner/` - ALBERT-style stub encoder + CRF baseline and docs
+- `albert_bisltm_crf/` - ALBERT-style stub encoder + BiLSTM + CRF baseline and docs
 - `test_bilstm_crf_e2e.py` - BiLSTM-CRF validation script
 - `test_bilstm_cnn_crf_e2e.py` - BiLSTM-CNN-CRF validation script
 - `test_idcnn_crf_e2e.py` - IDCNN-CRF validation script
 - `test_transformer_crf_e2e.py` - Transformer-CRF validation script
+- `test_Lattice_LSTM_e2e.py` - Lattice-LSTM validation script
+- `test_albert_crf_ner_e2e.py` - Albert-CRF baseline validation script
+- `test_albert_bisltm_crf_e2e.py` - Albert-BiLSTM-CRF baseline validation script
 
 ## Quick start
 
@@ -86,14 +115,10 @@ Prediction smoke test:
 
 ## Notes
 
-- Current migration scope: `BILSTM_CRF` only.
-- Push marker: initial release.
 - Fake data is only for pipeline validation, not for real-world benchmark claims.
-- On synthetic data, perfect scores mainly indicate that the pipeline is correct and the task pattern is learnable.
-- `BILSTM_CNN_CRF` has also been migrated and smoke-tested in this repo.
-- `IDCNN_CRF` has also been migrated and smoke-tested in this repo.
-- `transformer_crf` has also been migrated and end-to-end validated in this repo.
+- On synthetic data, very high scores mainly indicate that the pipeline is correct and the task pattern is learnable.
 - `transformer_crf` synthetic e2e result: `acc=0.9946`, `prec=1.0000`, `recall=0.9896`, `f1=0.9948`.
 - `transformer_crf` currently aligns its synthetic validation label space to `O/B-BRD/I-BRD/B-KWD/I-KWD`.
+- `Lattice_LSTM` has been moved closer to the original repo's trie / gazetteer data flow, and now uses a dedicated instance-builder stage for train / evaluate / predict. It is still **not** a faithful reimplementation of the original TensorFlow `LatticeLSTMCell`.
+- `albert_crf_ner` and `albert_bisltm_crf` are currently **torch baselines with ALBERT-style stub encoders**. They are useful for migration continuity and synthetic e2e validation, but should **not** be described as real pretrained-ALBERT reproductions yet.
 - Real-data effect is still unverified for all baselines.
-- Other models from the original repo are not yet migrated in this repo.

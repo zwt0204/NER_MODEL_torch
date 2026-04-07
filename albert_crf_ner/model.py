@@ -1,7 +1,9 @@
 # -*- encoding: utf-8 -*-
 """
-PyTorch baseline implementation of Albert-CRF-style NER.
-This runtime currently uses a lightweight encoder stub instead of a real pretrained AlbertModel.
+PyTorch Albert-CRF-style NER using a real HuggingFace `AlbertModel` encoder.
+By default this module builds a small random-initialized ALBERT config so the
+existing training / evaluation / prediction pipeline can run without requiring
+external model downloads.
 """
 from __future__ import annotations
 
@@ -10,20 +12,7 @@ from typing import Dict, List, Sequence, Tuple
 import torch
 from torch import nn
 from TorchCRF import CRF
-
-
-class PositionalEncoding(nn.Module):
-    def __init__(self, d_model: int, max_len: int = 512):
-        super().__init__()
-        pe = torch.zeros(max_len, d_model)
-        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-torch.log(torch.tensor(10000.0)) / d_model))
-        pe[:, 0::2] = torch.sin(position * div_term)
-        pe[:, 1::2] = torch.cos(position * div_term)
-        self.register_buffer('pe', pe.unsqueeze(0))
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return x + self.pe[:, :x.size(1)]
+from transformers import AlbertConfig, AlbertModel
 
 
 class NerCore(nn.Module):
@@ -43,26 +32,28 @@ class NerCore(nn.Module):
         self.learning_rate = learning_rate
         self.output_class_size = class_size
         self.keep_prob = keep_prob
-        self.embedding_size = 128
+        self.hidden_size = 128
+        self.embedding_size = self.hidden_size
         self.num_heads = 4
         self.ffn_dim = 256
-        self.num_layers = 1
+        self.num_layers = 2
 
-        self.embedding = nn.Embedding(self.vocab_size, self.embedding_size, padding_idx=0)
-        self.position = PositionalEncoding(self.embedding_size, max_len=io_sequence_size + 5)
-        encoder_layer = nn.TransformerEncoderLayer(
-            d_model=self.embedding_size,
-            nhead=self.num_heads,
-            dim_feedforward=self.ffn_dim,
-            dropout=1 - self.keep_prob,
-            batch_first=True,
-            activation='gelu',
+        config = AlbertConfig(
+            vocab_size=self.vocab_size,
+            embedding_size=self.embedding_size,
+            hidden_size=self.hidden_size,
+            intermediate_size=self.ffn_dim,
+            num_attention_heads=self.num_heads,
+            num_hidden_layers=self.num_layers,
+            max_position_embeddings=max(512, io_sequence_size + 8),
+            hidden_dropout_prob=1 - self.keep_prob,
+            attention_probs_dropout_prob=1 - self.keep_prob,
+            type_vocab_size=1,
+            pad_token_id=0,
         )
-        self.encoder = nn.TransformerEncoder(encoder_layer, num_layers=self.num_layers)
-        if hasattr(self.encoder, 'enable_nested_tensor'):
-            self.encoder.enable_nested_tensor = False
+        self.encoder = AlbertModel(config)
         self.dropout = nn.Dropout(1 - self.keep_prob)
-        self.classifier = nn.Linear(self.embedding_size, self.output_class_size)
+        self.classifier = nn.Linear(self.hidden_size, self.output_class_size)
         self.crf = CRF(self.output_class_size, pad_idx=None, use_gpu=torch.cuda.is_available())
 
     @staticmethod
@@ -72,10 +63,8 @@ class NerCore(nn.Module):
 
     def forward(self, inputs: torch.Tensor, sequence_lengths: torch.Tensor) -> torch.Tensor:
         mask = self.sequence_mask(sequence_lengths, inputs.size(1))
-        x = self.embedding(inputs.long())
-        x = self.position(x)
-        x = self.encoder(x, src_key_padding_mask=~mask)
-        x = self.dropout(x)
+        outputs = self.encoder(input_ids=inputs.long(), attention_mask=mask.long())
+        x = self.dropout(outputs.last_hidden_state)
         emissions = self.classifier(x)
         emissions = emissions.masked_fill(~mask.unsqueeze(-1), 0.0)
         return emissions
