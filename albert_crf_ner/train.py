@@ -25,9 +25,15 @@ class Batch:
 
 
 class NerTrainner:
-    def __init__(self, vocab_file: str = 'vocab.json', model_dir: str = 'models/AlbertCRF'):
+    def __init__(
+        self,
+        vocab_file: str = 'vocab.json',
+        model_dir: str = 'models/AlbertCRF',
+        pretrained_model_name_or_path: str | None = None,
+    ):
         self.model_dir = model_dir
         self.vocab_file = vocab_file
+        self.pretrained_model_name_or_path = pretrained_model_name_or_path
         self.char_index = {' ': 0}
         self.load_dict()
         self.unknow_char_id = len(self.char_index)
@@ -41,7 +47,15 @@ class NerTrainner:
         self.batch_size = 16
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-        self.model = NerCore(self.io_sequence_size, vocab_size, class_size, keep_prob, learning_rate, trainable)
+        self.model = NerCore(
+            self.io_sequence_size,
+            vocab_size,
+            class_size,
+            keep_prob,
+            learning_rate,
+            trainable,
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+        )
         self.model.to(self.device)
         self.optimizer = Adam(self.model.parameters(), lr=learning_rate)
         os.makedirs(self.model_dir, exist_ok=True)
@@ -122,7 +136,7 @@ class NerTrainner:
                 'state_dict': self.model.state_dict(),
                 'char_index': self.char_index,
                 'classnames': self.classnames,
-                'io_sequence_size': self.io_sequence_size,
+                'pretrained_model_name_or_path': self.pretrained_model_name_or_path,
             },
             model_path,
         )
@@ -133,6 +147,7 @@ class NerTrainner:
         if not os.path.exists(model_path):
             return False
         payload = torch.load(model_path, map_location=self.device)
+        self.pretrained_model_name_or_path = payload.get('pretrained_model_name_or_path')
         self.model.load_state_dict(payload['state_dict'])
         self.model.to(self.device)
         return True
@@ -160,10 +175,15 @@ def main():
     parser.add_argument('--dev-file', default=None)
     parser.add_argument('--dev-format', default='auto', choices=['auto', 'jsonl', 'conll'])
     parser.add_argument('--model-dir', default='models/AlbertCRF')
+    parser.add_argument('--pretrained-model-name-or-path', default=None)
     parser.add_argument('--epochs', type=int, default=10)
     args = parser.parse_args()
 
-    trainner = NerTrainner(vocab_file=args.vocab_file, model_dir=args.model_dir)
+    trainner = NerTrainner(
+        vocab_file=args.vocab_file,
+        model_dir=args.model_dir,
+        pretrained_model_name_or_path=args.pretrained_model_name_or_path,
+    )
     train_records = load_dataset(args.train_file, fmt=args.train_format)
     tmp_dir = tempfile.mkdtemp(prefix='ner_albert_crf_train_')
     train_file = os.path.join(tmp_dir, 'train.json')

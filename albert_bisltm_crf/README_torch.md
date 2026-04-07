@@ -10,6 +10,7 @@ Current scope is intentionally conservative:
 
 - the code path is now based on `transformers` + `AlbertModel`
 - the default runtime path uses a **small random-initialized `AlbertConfig`** so the existing train / evaluate / predict pipeline can run without depending on an external model download
+- an optional `--pretrained-model-name-or-path` entry is now available in train / evaluate / predict, so the model can try to load a real HuggingFace checkpoint or local pretrained directory when provided
 - this means the project has moved from a pure local encoder stub to a **real transformer + BiLSTM implementation**, but it is still **not yet a verified pretrained-ALBERT reproduction**
 
 So the current version is suitable for:
@@ -60,4 +61,6 @@ python -m albert_bisltm_crf.predict \
 - Fake data is only for pipeline validation, not for real business quality claims.
 - The encoder implementation now depends on `transformers` and `AlbertModel`.
 - The current default path uses a small random-initialized ALBERT config to keep the pipeline self-contained.
+- `train`, `evaluate`, and `predict` now support `--pretrained-model-name-or-path` as an optional loading entry.
+- If pretrained loading fails, the code falls back to the local random-initialized config.
 - Pretrained-weight loading / real-data effect is still unverified.

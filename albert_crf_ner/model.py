@@ -24,6 +24,7 @@ class NerCore(nn.Module):
         keep_prob: float = 0.9,
         learning_rate: float = 1e-4,
         trainable: bool = False,
+        pretrained_model_name_or_path: str | None = None,
     ):
         super().__init__()
         self.is_training = trainable
@@ -37,6 +38,7 @@ class NerCore(nn.Module):
         self.num_heads = 4
         self.ffn_dim = 256
         self.num_layers = 2
+        self.pretrained_model_name_or_path = pretrained_model_name_or_path
 
         config = AlbertConfig(
             vocab_size=self.vocab_size,
@@ -51,10 +53,23 @@ class NerCore(nn.Module):
             type_vocab_size=1,
             pad_token_id=0,
         )
-        self.encoder = AlbertModel(config)
+        self.encoder = self.build_encoder(config, pretrained_model_name_or_path)
         self.dropout = nn.Dropout(1 - self.keep_prob)
         self.classifier = nn.Linear(self.hidden_size, self.output_class_size)
         self.crf = CRF(self.output_class_size, pad_idx=None, use_gpu=torch.cuda.is_available())
+
+    @staticmethod
+    def build_encoder(config: AlbertConfig, pretrained_model_name_or_path: str | None) -> AlbertModel:
+        if pretrained_model_name_or_path:
+            try:
+                print(f'Loading pretrained AlbertModel from: {pretrained_model_name_or_path}')
+                return AlbertModel.from_pretrained(pretrained_model_name_or_path)
+            except Exception as exc:
+                print(
+                    'Falling back to random-initialized AlbertConfig because pretrained load failed: '
+                    f'{exc}'
+                )
+        return AlbertModel(config)
 
     @staticmethod
     def sequence_mask(lengths: torch.Tensor, max_len: int) -> torch.Tensor:

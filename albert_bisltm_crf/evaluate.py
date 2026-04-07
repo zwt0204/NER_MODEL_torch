@@ -15,9 +15,14 @@ def main():
     parser.add_argument('--model-path', default=None)
     parser.add_argument('--eval-file', required=True)
     parser.add_argument('--eval-format', default='auto', choices=['auto', 'jsonl', 'conll'])
+    parser.add_argument('--pretrained-model-name-or-path', default=None)
     args = parser.parse_args()
 
-    trainer = NerTrainner(vocab_file=args.vocab_file, model_dir=args.model_dir)
+    trainer = NerTrainner(
+        vocab_file=args.vocab_file,
+        model_dir=args.model_dir,
+        pretrained_model_name_or_path=args.pretrained_model_name_or_path,
+    )
     model_path = args.model_path or os.path.join(args.model_dir, 'ner.pt')
     ok = trainer.load(model_path)
     if not ok:

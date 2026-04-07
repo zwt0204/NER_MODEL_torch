@@ -12,9 +12,15 @@ from .model import NerCore
 
 
 class NerPredicter:
-    def __init__(self, vocab_file: str = 'vocab.json', model_path: str = 'models/AlbertCRF/ner.pt'):
+    def __init__(
+        self,
+        vocab_file: str = 'vocab.json',
+        model_path: str = 'models/AlbertCRF/ner.pt',
+        pretrained_model_name_or_path: str | None = None,
+    ):
         self.model_path = model_path
         self.vocab_file = vocab_file
+        self.pretrained_model_name_or_path = pretrained_model_name_or_path
         self.char_index = {' ': 0}
         self.load_dict()
         self.unknow_char_id = len(self.char_index)
@@ -27,7 +33,15 @@ class NerPredicter:
         class_size = len(self.classnames)
         self.classids = {value: key for key, value in self.classnames.items()}
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model = NerCore(self.io_sequence_size, vocab_size, class_size, keep_prob, learning_rate, trainable)
+        self.model = NerCore(
+            self.io_sequence_size,
+            vocab_size,
+            class_size,
+            keep_prob,
+            learning_rate,
+            trainable,
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+        )
         self.model.to(self.device)
         self.load()
 
@@ -41,6 +55,9 @@ class NerPredicter:
         if not os.path.exists(self.model_path):
             raise FileNotFoundError(f'model checkpoint not found: {self.model_path}')
         payload = torch.load(self.model_path, map_location=self.device)
+        checkpoint_pretrained = payload.get('pretrained_model_name_or_path')
+        if checkpoint_pretrained and checkpoint_pretrained != self.pretrained_model_name_or_path:
+            self.pretrained_model_name_or_path = checkpoint_pretrained
         self.model.load_state_dict(payload['state_dict'])
         self.model.to(self.device)
         self.model.eval()
@@ -72,10 +89,15 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--vocab-file', default='vocab.json')
     parser.add_argument('--model-path', default='models/AlbertCRF/ner.pt')
+    parser.add_argument('--pretrained-model-name-or-path', default=None)
     parser.add_argument('--text', default='请问肯德基优惠券在哪里')
     args = parser.parse_args()
 
-    predicter = NerPredicter(vocab_file=args.vocab_file, model_path=args.model_path)
+    predicter = NerPredicter(
+        vocab_file=args.vocab_file,
+        model_path=args.model_path,
+        pretrained_model_name_or_path=args.pretrained_model_name_or_path,
+    )
     line = predicter.predict(args.text)
     print('-> ' + args.text)
     print('--> ' + line)
