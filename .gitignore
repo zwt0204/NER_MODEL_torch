@@ -5,3 +5,6 @@ __pycache__/
 .venv/
 venv/
 BILSTM_CRF/demo_data/
+BILSTM_CNN_CRF/demo_data/
+IDCNN_CRF/demo_data/
+transformer_crf/demo_data/

@@ -9,6 +9,7 @@ This repo currently includes runnable torch baselines with:
 - **BiLSTM-CRF**
 - **BiLSTM-CNN-CRF**
 - **IDCNN-CRF**
+- **Transformer-CRF**
 
 Shared capabilities:
 
@@ -24,10 +25,11 @@ Shared capabilities:
 
 - `BILSTM_CRF/` - torch implementation and docs
 - `BILSTM_CNN_CRF/` - torch implementation and docs
-- `IDCNN_CRF/` - torch implementation and docs
+- `transformer_crf/` - torch implementation and docs
 - `test_bilstm_crf_e2e.py` - BiLSTM-CRF validation script
 - `test_bilstm_cnn_crf_e2e.py` - BiLSTM-CNN-CRF validation script
 - `test_idcnn_crf_e2e.py` - IDCNN-CRF validation script
+- `test_transformer_crf_e2e.py` - Transformer-CRF validation script
 
 ## Quick start
 
@@ -90,4 +92,8 @@ Prediction smoke test:
 - On synthetic data, perfect scores mainly indicate that the pipeline is correct and the task pattern is learnable.
 - `BILSTM_CNN_CRF` has also been migrated and smoke-tested in this repo.
 - `IDCNN_CRF` has also been migrated and smoke-tested in this repo.
+- `transformer_crf` has also been migrated and end-to-end validated in this repo.
+- `transformer_crf` synthetic e2e result: `acc=0.9946`, `prec=1.0000`, `recall=0.9896`, `f1=0.9948`.
+- `transformer_crf` currently aligns its synthetic validation label space to `O/B-BRD/I-BRD/B-KWD/I-KWD`.
+- Real-data effect is still unverified for all baselines.
 - Other models from the original repo are not yet migrated in this repo.
