@@ -11,8 +11,8 @@ This repo currently includes runnable torch baselines with:
 - **IDCNN-CRF**
 - **Transformer-CRF**
 - **Lattice-LSTM**
-- **Albert-CRF NER** (current environment uses an ALBERT-style stub encoder, not real pretrained `AlbertModel` weights)
-- **Albert-BiLSTM-CRF** (current environment uses an ALBERT-style stub encoder, not real pretrained `AlbertModel` weights)
+- **Albert-CRF NER** (implemented on top of HuggingFace `AlbertModel`; default path uses a small random-initialized local config, with optional pretrained loading)
+- **Albert-BiLSTM-CRF** (implemented on top of HuggingFace `AlbertModel` + BiLSTM; default path uses a small random-initialized local config, with optional pretrained loading)
 
 Shared capabilities:
 
@@ -33,8 +33,8 @@ Shared capabilities:
 | `IDCNN_CRF` | Yes | Yes | N/A | No |
 | `transformer_crf` | Yes | Yes | N/A | No |
 | `Lattice_LSTM` | Yes | Yes | N/A | No |
-| `albert_crf_ner` | Yes | Yes | No — current version is a stub ALBERT-style encoder baseline | No |
-| `albert_bisltm_crf` | Yes | Yes | No — current version is a stub ALBERT-style encoder baseline | No |
+| `albert_crf_ner` | Yes | Yes | Partial — real `AlbertModel` architecture is wired in, but pretrained loading / real-data effect is still unverified | No |
+| `albert_bisltm_crf` | Yes | Yes | Partial — real `AlbertModel` + BiLSTM architecture is wired in, but pretrained loading / real-data effect is still unverified | No |
 
 Interpretation:
 
@@ -50,15 +50,18 @@ Interpretation:
 - `IDCNN_CRF/` - torch implementation and docs
 - `transformer_crf/` - torch implementation and docs
 - `Lattice_LSTM/` - torch implementation and docs
-- `albert_crf_ner/` - ALBERT-style stub encoder + CRF baseline and docs
-- `albert_bisltm_crf/` - ALBERT-style stub encoder + BiLSTM + CRF baseline and docs
+- `albert_crf_ner/` - HuggingFace `AlbertModel` + CRF baseline and docs
+- `albert_bisltm_crf/` - HuggingFace `AlbertModel` + BiLSTM + CRF baseline and docs
 - `test_bilstm_crf_e2e.py` - BiLSTM-CRF validation script
 - `test_bilstm_cnn_crf_e2e.py` - BiLSTM-CNN-CRF validation script
 - `test_idcnn_crf_e2e.py` - IDCNN-CRF validation script
 - `test_transformer_crf_e2e.py` - Transformer-CRF validation script
 - `test_Lattice_LSTM_e2e.py` - Lattice-LSTM validation script
 - `test_albert_crf_ner_e2e.py` - Albert-CRF baseline validation script
-- `test_albert_bisltm_crf_e2e.py` - Albert-BiLSTM-CRF baseline validation script
+- `test_albert_bisltm_crf_e2e.py` - Albert-BiLSTM-CRF validation script
+- `test_albert_e2e_serial.py` - Serial runner for the two ALBERT-family e2e tests (recommended to avoid environment-level instability when running them concurrently)
+
+All e2e scripts now apply a conservative runtime environment (`OMP_NUM_THREADS=1`, `MKL_NUM_THREADS=1`, `OPENBLAS_NUM_THREADS=1`, `NUMEXPR_NUM_THREADS=1`, `TOKENIZERS_PARALLELISM=false`) to reduce environment-level flakiness during synthetic validation.
 
 ## Quick start
 
@@ -113,6 +116,17 @@ Prediction smoke test:
 - input: `请问肯德基优惠券在哪里`
 - output: `肯德基 , 优惠券`
 
+Recommended ALBERT-family test execution:
+
+```bash
+python test_albert_e2e_serial.py
+```
+
+ALBERT-family note:
+
+- `test_albert_crf_ner_e2e.py` and `test_albert_bisltm_crf_e2e.py` are both individually runnable.
+- In the current environment, they are recommended to run **serially**, not concurrently, because concurrent execution has shown intermittent low-level runtime instability during `albert_bisltm_crf.evaluate`.
+
 ## Notes
 
 - Fake data is only for pipeline validation, not for real-world benchmark claims.
@@ -120,5 +134,5 @@ Prediction smoke test:
 - `transformer_crf` synthetic e2e result: `acc=0.9946`, `prec=1.0000`, `recall=0.9896`, `f1=0.9948`.
 - `transformer_crf` currently aligns its synthetic validation label space to `O/B-BRD/I-BRD/B-KWD/I-KWD`.
 - `Lattice_LSTM` has been moved closer to the original repo's trie / gazetteer data flow, and now uses a dedicated instance-builder stage for train / evaluate / predict. It is still **not** a faithful reimplementation of the original TensorFlow `LatticeLSTMCell`.
-- `albert_crf_ner` and `albert_bisltm_crf` are currently **torch baselines with ALBERT-style stub encoders**. They are useful for migration continuity and synthetic e2e validation, but should **not** be described as real pretrained-ALBERT reproductions yet.
+- `albert_crf_ner` and `albert_bisltm_crf` now use real HuggingFace `AlbertModel` code paths. Their default runtime remains self-contained via a small random-initialized local config, and optional pretrained loading is available, but pretrained-weight behavior and real-data effect are still unverified.
 - Real-data effect is still unverified for all baselines.

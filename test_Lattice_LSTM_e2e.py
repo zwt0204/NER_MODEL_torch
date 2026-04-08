@@ -8,6 +8,11 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 PYTHON = '/tmp/ner_torch_venv/bin/python'
 ENV = os.environ.copy()
 ENV['PYTHONPATH'] = ROOT + os.pathsep + ENV.get('PYTHONPATH', '')
+ENV.setdefault('OMP_NUM_THREADS', '1')
+ENV.setdefault('MKL_NUM_THREADS', '1')
+ENV.setdefault('OPENBLAS_NUM_THREADS', '1')
+ENV.setdefault('NUMEXPR_NUM_THREADS', '1')
+ENV.setdefault('TOKENIZERS_PARALLELISM', 'false')
 
 
 def run(args):

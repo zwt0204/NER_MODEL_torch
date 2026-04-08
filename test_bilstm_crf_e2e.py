@@ -1,10 +1,15 @@
 import os
 import subprocess
 
-ROOT = "/root/.openclaw/workspace/NER_MODEL"
+ROOT = "/root/.openclaw/workspace/NER_MODEL_torch"
 PYTHON = "/tmp/ner_torch_venv/bin/python"
 ENV = dict(os.environ)
 ENV["PYTHONPATH"] = ROOT
+ENV.setdefault("OMP_NUM_THREADS", "1")
+ENV.setdefault("MKL_NUM_THREADS", "1")
+ENV.setdefault("OPENBLAS_NUM_THREADS", "1")
+ENV.setdefault("NUMEXPR_NUM_THREADS", "1")
+ENV.setdefault("TOKENIZERS_PARALLELISM", "false")
 
 
 def run(args):
